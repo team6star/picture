@@ -1,14 +1,17 @@
 <template>
   <div id="basicLayout">
     <a-layout style="min-height: 100vh">
+      <!-- 全局顶部栏 -->
       <a-layout-header class="header">
         <GlobalHeader />
       </a-layout-header>
       <a-layout-content class="content">
+        <!-- 动态替换内容 -->
         <router-view />
       </a-layout-content>
+      <!-- 全局底部栏 -->
       <a-layout-footer class="footer">
-        <a href="https://www.codefather.cn" target="_blank"> 编程导航 by 程序员鱼皮 </a>
+        <a href="https://www.codefather.cn" target="_blank"> 云图库 by coderstar </a>
       </a-layout-footer>
     </a-layout>
   </div>

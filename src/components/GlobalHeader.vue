@@ -1,10 +1,11 @@
 <template>
   <div id="globalHeader">
+    <!-- {{ JSON.stringify(loginUserStore.loginUser) }} -->
     <a-row :wrap="false">
       <a-col flex="200px">
         <router-link to="/">
           <div class="title-bar">
-            <img class="logo" src="/image.png" alt="logo" />
+            <img class="logo" src="../assets/logo.png" alt="logo" />
             <div class="title">云图库</div>
           </div>
         </router-link>
