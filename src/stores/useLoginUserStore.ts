@@ -7,6 +7,7 @@ export const useLoginUserStore = defineStore('loginUser', () => {
     userName: '未登录',
   })
 
+  // 获取当前登录用户
   async function fetchLoginUser() {
     // todo 由于后端还没提供接口，暂时注释
     // 测试用户登录，3 秒后登录
