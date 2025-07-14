@@ -14,7 +14,7 @@
     "openapi": "node openapi.config.js"
   },
   "dependencies": {
-    "ant-design-vue": "^4.2.6",
+    "ant-design-vue": "4.2.6",
     "axios": "^1.10.0",
     "pinia": "^3.0.1",
     "vue": "^3.5.13",

@@ -35,20 +35,108 @@
         <template v-if="column.dataIndex === 'createTime'">
           {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
+        <template v-else-if="column.dataIndex === 'updateTime'">
+          {{ dayjs(record.updateTime).format('YYYY-MM-DD HH:mm:ss') }}
+        </template>
         <template v-else-if="column.key === 'action'">
-          <a-button danger @click="doDelete(record.id)">删除</a-button>
+          <a-space>
+            <a-button type="primary" @click="handleEdit(record)">编辑</a-button>
+            <a-button danger @click="doDelete(record.id)">删除</a-button>
+          </a-space>
         </template>
       </template>
     </a-table>
   </div>
+  <!-- // ... 在模板最后添加编辑模态框 ... -->
+  <a-modal v-model:open="editVisible" title="编辑用户" @ok="handleEditSubmit">
+    <a-form :model="editForm" layout="vertical">
+      <a-form-item label="用户名">
+        <a-input v-model:value="editForm.userName" />
+      </a-form-item>
+      <a-form-item label="用户角色">
+        <a-select v-model:value="editForm.userRole">
+          <a-select-option value="admin">管理员</a-select-option>
+          <a-select-option value="user">普通用户</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item label="用户头像">
+        <a-upload
+          name="file"
+          :action="uploadUrl"
+          @change="handleAvatarChange"
+          :show-upload-list="false"
+        >
+          <a-button type="primary">上传新头像</a-button>
+          <template v-if="editForm.userAvatar">
+            <img :src="editForm.userAvatar" alt="avatar" style="width: 120px; margin-top: 10px" />
+          </template>
+        </a-upload>
+      </a-form-item>
+      <a-form-item label="用户简介">
+        <a-textarea v-model:value="editForm.userProfile" />
+      </a-form-item>
+    </a-form>
+  </a-modal>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { deleteUserUsingPost, listUserVoByPageUsingPost } from '@/api/userController.ts'
-import dayjs from 'dayjs'
+import {
+  deleteUserUsingPost,
+  listUserVoByPageUsingPost,
+  updateUserUsingPost,
+} from '@/api/userController.ts'
 
+import dayjs from 'dayjs'
+import { testUploadFileUsingPost } from '@/api/fileController'
+
+// 添加编辑相关状态
+const editVisible = ref(false)
+// https://yupicture-1318019277.cos.ap-shanghai.myqcloud.com/test/Lion.jpg
+// const baseURL = 'http://localhost:8123'
+// 修改COS访问域名
+const COS_DOMAIN = 'https://yupicture-1318019277.cos.ap-shanghai.myqcloud.com'
+// 上传接口
+const uploadUrl = ref('http://localhost:8123/api/file/test/upload')
+const editForm = reactive({
+  id: undefined,
+  userName: '',
+  userRole: '',
+  userAvatar: '',
+  userProfile: '',
+})
+
+// 处理头像上传
+const handleAvatarChange = async (info: any) => {
+  if (info.file.status === 'done') {
+    const res = await testUploadFileUsingPost({ file: info.file.originFileObj })
+    if (res.data.code === 0) {
+      // 拼接完整COS访问路径
+      editForm.userAvatar = `${COS_DOMAIN}/${res.data.data}`
+      message.success('头像上传成功')
+    }
+  }
+}
+// 编辑按钮点击处理
+const handleEdit = (record) => {
+  Object.assign(editForm, record)
+  editVisible.value = true
+}
+
+// 提交编辑
+const handleEditSubmit = async () => {
+  try {
+    const res = await updateUserUsingPost(editForm)
+    if (res.data.code === 0) {
+      message.success('更新成功')
+      editVisible.value = false
+      await fetchData()
+    }
+  } catch (error) {
+    message.error('更新失败')
+  }
+}
 const columns = [
   {
     title: 'id',
@@ -118,6 +206,7 @@ const fetchData = async () => {
     ...searchParams,
   })
   if (res.data.data) {
+    // console.log('用户数据响应:', res.data.data) // 添加调试日志
     dataList.value = res.data.data.records ?? []
     total.value = res.data.data.total ?? 0
   } else {

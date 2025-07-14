@@ -28,6 +28,7 @@
               </a-space>
               <template #overlay>
                 <a-menu>
+                  <a-menu-item @click="showProfileModal"><UserOutlined />个人中心</a-menu-item>
                   <a-menu-item @click="doLogout"><LogoutOutlined />退出登录</a-menu-item>
                 </a-menu>
               </template>
@@ -40,16 +41,62 @@
       </a-col>
     </a-row>
   </div>
+  <a-modal v-model:open="profileVisible" title="个人中心" @ok="handleProfileUpdate">
+    <a-form :model="profileForm" layout="vertical">
+      <a-form-item label="用户名">
+        <a-input v-model:value="profileForm.userName" />
+      </a-form-item>
+      <a-form-item label="用户角色">
+        <a-select v-model:value="profileForm.userRole">
+          <a-select-option value="admin">管理员</a-select-option>
+          <a-select-option value="user">普通用户</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item label="用户简介">
+        <a-textarea v-model:value="profileForm.userProfile" />
+      </a-form-item>
+    </a-form>
+  </a-modal>
 </template>
 <script lang="ts" setup>
-import { h, ref, computed } from 'vue'
-import { HomeOutlined } from '@ant-design/icons-vue'
+import { h, ref, computed, reactive } from 'vue'
+import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { message, type MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
-import { userLogoutUsingPost } from '@/api/userController'
+import { userLogoutUsingPost, updateUserUsingPost } from '@/api/userController'
 
 const loginUserStore = useLoginUserStore()
+
+// 个人中心相关状态
+const profileVisible = ref(false)
+const profileForm = reactive({
+  id: undefined,
+  userName: '',
+  userRole: '',
+  userAvatar: '',
+  userProfile: '',
+})
+
+// 显示个人中心模态框
+const showProfileModal = () => {
+  Object.assign(profileForm, loginUserStore.loginUser)
+  profileVisible.value = true
+}
+
+// 提交个人信息更新
+const handleProfileUpdate = async () => {
+  try {
+    const res = await updateUserUsingPost(profileForm)
+    if (res.data.code === 0) {
+      message.success('更新成功')
+      loginUserStore.setLoginUser({ ...loginUserStore.loginUser, ...profileForm })
+      profileVisible.value = false
+    }
+  } catch (error) {
+    message.error('更新失败')
+  }
+}
 
 // ref<MenuProps['items']>
 // 菜单列表
